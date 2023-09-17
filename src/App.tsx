@@ -1,9 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import './App.css'
+import { Foo } from './shared/Foo'
+import { remult } from 'remult'
+
+async function getFoo() {
+  const foo = await remult.repo(Foo).findFirst();
+  if (foo) return foo;
+  else return await remult.repo(Foo).insert({});
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [foo, setFoo] = useState(new Foo());
+  const retrieveFoo = () => {
+    (async () => setFoo(await getFoo()))();
+  };
+  useEffect(retrieveFoo, []);
 
   return (
     <div className="App">
@@ -17,8 +29,17 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+        <button onClick={async () => {
+            await remult.repo(Foo).update(foo.id, { a: foo.a + 1 });
+            retrieveFoo();
+        }}>
+          a is {foo.a}
+        </button>
+        <button onClick={async () => {
+            await remult.repo(Foo).update(foo.id, { b: foo.b + 1 });
+            retrieveFoo();
+        }}>
+          b is {foo.b}
         </button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
